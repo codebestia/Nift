@@ -24,6 +24,8 @@ import { useReadContract } from '@starknet-react/core';
 import { Functions } from '@/utils/functions';
 import { useDeployContract } from '@/hooks/useDeployContract';
 import CardSkeleton from './card-skeleton';
+import { getETHPriceEquivalent, getSTRKPriceEquivalent } from '@/lib/prices';
+import { useTokenABI } from '@/hooks/useDeployedToken';
 
 type GiftCardWidgetProps = {
   tokenId: number;
@@ -33,6 +35,7 @@ type GiftCardWidgetProps = {
 const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
   const [card, setCard] = useState<GiftCard | undefined>(undefined);
   const deployedContract = useDeployContract();
+  const tokenABI = useTokenABI();
   const {
     data: giftData,
     isLoading,
@@ -44,6 +47,12 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
     abi: deployedContract?.abi,
     watch: true,
     args: [tokenId],
+  });
+  const { data: tokenSymbol } = useReadContract({
+    functionName: 'symbol',
+    address: giftData?.token_contract ?? '0x0',
+    abi: tokenABI,
+    watch: true
   });
   useEffect(() => {
     if (giftData) {
@@ -63,14 +72,14 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
         <CardSkeleton />
       ) : (
         <Card
-          key={card?.id}
+          key={card?.token_id}
           className='overflow-hidden bg-gradient-to-br from-purple-950 to-slate-900 border border-purple-800/30 hover:border-purple-500/50 transition-all'
         >
           <CardHeader className='p-0'>
             <div className='relative aspect-square bg-black/20'>
               <Image
-                src={card?.image || '/placeholder.svg'}
-                alt={`${card?.name}`}
+                src={'/placeholder.svg'}
+                alt={`${tokenSymbol ?? "Loading..."}`}
                 fill
                 className='object-cover'
               />
@@ -95,7 +104,7 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
                   </TooltipProvider>
 
                   <Link
-                    href={`https://voyager.io/token/${card?.token_id}`}
+                    href={`https://sepolia.voyager.io/nft-contract/${card?.token_contract}/${card?.token_id}`}
                     target='_blank'
                     className='text-xs text-white/70 hover:text-white flex items-center gap-1'
                   >
@@ -107,7 +116,7 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
           </CardHeader>
           <CardContent className='p-4 space-y-3'>
             <CardTitle className='flex items-center justify-between'>
-              <span>{card?.name}</span>
+              <span>{tokenSymbol ?? "..."} Gift Card</span>
               <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
                 {card?.token_id}
               </span>
@@ -115,18 +124,22 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
             <div className='space-y-1'>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Token</span>
-                <span className='font-medium'>{card?.token}</span>
+                <span className='font-medium'>{tokenSymbol ?? "Loading..."}</span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
-                  {card?.amount} {card?.token}
+                  {card?.token_amount} {tokenSymbol ?? "Loading..."}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Value</span>
                 <span className='text-sm text-zinc-300'>
-                  ${card?.value.toLocaleString()}
+                  ${tokenSymbol == "ETH" ?(
+                    getETHPriceEquivalent(card?.token_amount ?? 0)
+                  ): tokenSymbol == "STRK"? (
+                    getSTRKPriceEquivalent(card?.token_amount ?? 0)
+                  ):(0)}
                 </span>
               </div>
             </div>

@@ -19,8 +19,8 @@ import {
   useTransactionReceipt,
 } from '@starknet-react/core';
 import { Functions } from '@/utils/functions';
-import tokenABI from '@/contracts/tokenAbi';
 import CardSkeleton from './card-skeleton';
+import { useTokenABI } from '@/hooks/useDeployedToken';
 
 type RedeemGiftCardWidgetProps = {
   tokenId: number;
@@ -45,6 +45,7 @@ const RedeemGiftCardWidget = ({
     watch: true,
     args: [tokenId],
   });
+  const tokenABI = useTokenABI();
   const { data: tokenName } = useReadContract({
     functionName: 'name',
     address: giftData?.token_contract ?? '0x0',

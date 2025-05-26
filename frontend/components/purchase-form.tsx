@@ -49,6 +49,8 @@ import {
 } from '@starknet-react/core';
 import { Functions } from '@/utils/functions';
 import { useToast } from '@/hooks/use-toast';
+import { useTokenABI } from '@/hooks/useDeployedToken';
+import { isThisQuarter } from 'date-fns';
 
 type GiftResultType = {
   id: number;
@@ -72,8 +74,8 @@ const formSchema = z.object({
 export function PurchaseForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
-  const [currentToken, setCurrentToken] = useState('0x0');
-  const [currentAmount, setCurrentAmount] = useState(0);
+  const [currentToken, setCurrentToken] = useState<`0x${string}` | string | undefined>('0x0');
+  const [currentAmount, setCurrentAmount] = useState<bigint>(BigInt(0));
   const [usdValue, setUsdValue] = useState(0);
   const { toast } = useToast();
 
@@ -85,16 +87,28 @@ export function PurchaseForm() {
     },
   });
   const deployedContract = useDeployContract();
+  const tokenABI = useTokenABI();
   const { contract } = useContract({
     abi: deployedContract?.abi,
     address: deployedContract?.address,
   });
+  const {contract: tokenContract} = useContract({
+    abi: tokenABI,
+    address: currentToken
+  })
   const calls = useCallback(() => {
-    if (!contract) {
+    if (!contract || !tokenContract) {
       console.log('Could not get contract data');
       return;
     }
     return [
+      tokenContract.populate(
+        'approve',
+        [
+          currentAmount,
+          deployedContract?.address
+        ]
+      ),
       contract.populate(Functions.purchaseGiftCard, [
         currentToken,
         currentAmount,
@@ -116,9 +130,9 @@ export function PurchaseForm() {
   });
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setCurrentToken(values.token);
-    setCurrentAmount(Number(values.amount));
+    setCurrentAmount(BigInt(Number(values.amount) * (10 ** 18)));
     setIsProcessing(true);
-    let result = await sendAsync(calls()); // send data to smart contracf
+    let result = await sendAsync(calls()); // send data to smart contract
     setIsProcessing(false);
     setIsPurchased(true);
   }

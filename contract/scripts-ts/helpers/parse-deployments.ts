@@ -38,11 +38,12 @@ const getContractDataFromDeployments = (): Record<
         try {
           const abiFilePath = path.join(
             __dirname,
-            `../../target/dev/contracts_${contractData.contract}.contract_class.json`
+            `../../target/dev/nift_${contractData.contract}.contract_class.json`
           );
           const abiContent: CompiledSierra = JSON.parse(
             fs.readFileSync(abiFilePath, "utf8")
           );
+          
 
           allContractsData[chainId] = {
             ...allContractsData[chainId],
@@ -62,6 +63,7 @@ const getContractDataFromDeployments = (): Record<
 
 const generateTsAbis = () => {
   const allContractsData = getContractDataFromDeployments();
+  
 
   const fileContent = Object.entries(allContractsData).reduce(
     (content, [chainId, chainConfig]) => {
