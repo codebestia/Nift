@@ -49,9 +49,9 @@ struct Storage {
 struct Gift {
     token_id: u256,           // Unique NFT identifier
     token_contract: ContractAddress, // ERC-20 token address
-    token_amount: u256,       // Amount of tokens locked
+    token_amount: u256,       // Amount of tokens
     minter: ContractAddress,  // Original purchaser
-    status: GiftStatus,       // PURCHASED or REDEEMED
+    status: GiftStatus,       // PENDING, PURCHASED or REDEEMED
 }
 ```
 
@@ -124,16 +124,13 @@ struct GiftRedeemed {
 - StarkNet development environment
 - Cairo compiler
 - OpenZeppelin Cairo contracts
+- Node and NPM
 
 ### Constructor Parameters
 ```cairo
 fn constructor(owner: ContractAddress)
 ```
 - `owner`: Address that will have administrative control
-
-### Environment Variables
-- Set appropriate base URI for NFT metadata
-- Configure supported ERC-20 tokens if needed
 
 ## Future Enhancements
 
