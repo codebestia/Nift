@@ -36,6 +36,20 @@ Built on the starknet blockchain.
 
 ## 🚧 Smart Contract Features
 
+The NIFT contract enables users to:
+- Purchase gift cards by depositing ERC-20 tokens
+- Receive NFT gift cards as proof of ownership
+- Transfer gift cards to other users
+- Redeem gift cards to receive the underlying tokens
+- Earn loyalty points through purchases
+
+### Core Functionality
+- **ERC-721 Compliant**: Full NFT standard implementation with enumerable extension
+- **Multi-Token Support**: Accept any ERC-20 token for gift card purchases
+- **Secure Redemption**: Only gift card owners can redeem their tokens
+- **Points System**: Users earn points for purchases (loyalty program ready)
+- **Event Tracking**: Comprehensive event logging for all major actions
+
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 14 with App Router
@@ -45,6 +59,8 @@ Built on the starknet blockchain.
 - **Icons**: Lucide React
 - **Charts**: Recharts
 - **State Management**: React Hooks
+- **Smart Contract**: Cairo
+- **Core Contract Dependency**: Openzepplin
 
 ## 🚀 Getting Started
 
@@ -53,13 +69,16 @@ Built on the starknet blockchain.
 - Node.js 18+ 
 - npm or yarn
 - Git
+- Scarb
+- Starknet foundry
 
 ### Installation
 
 1. Clone the repository:
 \`\`\`bash
 git clone https://github.com/your-username/nift-web3-gift-cards.git
-cd nift-web3-gift-cards
+cd nift
+cd frontend
 \`\`\`
 
 2. Install dependencies:
@@ -92,15 +111,16 @@ yarn dev
 
 
 ### 🎯 Integration
-- Smart contract integration for NFT minting
-- Real wallet providers (MetaMask, WalletConnect)
+- Smart contract integration for Gift card purchase and redeem.
+- Real wallet providers (Argent, Bravos)
 - Blockchain transaction processing
-- IPFS for NFT metadata storage
+- IPFS for NFT metadata storage (coming soon)
 - Real-time price feeds
 
 ## 🔮 Future Enhancements
 
 - **Multi-chain Support**: Support for multiple blockchains
+- **NFT Image Generation**: Backend service for generating Nft image automatically after gift card purchase.
 - **Advanced Analytics**: More detailed metrics and reporting
 - **Social Features**: Gift card sharing and social media integration
 - **Mobile App**: React Native implementation
