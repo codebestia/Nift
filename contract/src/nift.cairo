@@ -175,6 +175,9 @@ pub mod Nift {
         fn get_gift_card_info(self: @ContractState, token_id: u256) -> Gift {
             self.gifts.read(token_id)
         }
+        fn get_all_user_gifts(self: @ContractState, user: ContractAddress) -> Span<u256> {
+            self.erc721_enumerable.all_tokens_of_owner(user)
+        }
         fn get_user_purchased_gifts(self: @ContractState, user: ContractAddress) -> Array<Gift> {
             let mut array_gifts: Array<Gift> = array![];
             let user_gifts = self.user_purchased_gifts.entry(user);
