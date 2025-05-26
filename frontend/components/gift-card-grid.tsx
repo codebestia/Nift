@@ -270,13 +270,13 @@ export function GiftCardGrid({
                   <div className='flex items-center justify-between'>
                     <span className='font-medium'>Gift Card</span>
                     <span>
-                      {selectedCard.amount} {selectedCard.token}
+                      {selectedCard.token_amount} {selectedCard.token_id}
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>
                     <span className='font-medium'>Transaction</span>
                     <Link
-                      href={`https://etherscan.io/tx/${transactionHash}`}
+                      href={`https://sepolia.voyager.online/tx/${transactionHash}`}
                       target='_blank'
                       className='text-purple-400 hover:text-purple-300 text-sm flex items-center gap-1'
                     >

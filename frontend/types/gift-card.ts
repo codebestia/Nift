@@ -1,9 +1,7 @@
 export type GiftCard = {
-  id: string;
-  image: string;
-  name: string;
-  token: string;
-  amount: number;
-  value: number;
+  status: string;
+  minter: string;
+  token_contract: string;
+  token_amount: number;
   token_id: string;
 };
