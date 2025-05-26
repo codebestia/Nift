@@ -75,25 +75,25 @@ The NIFT contract enables users to:
 ### Installation
 
 1. Clone the repository:
-\`\`\`bash
-git clone https://github.com/your-username/nift-web3-gift-cards.git
+```bash
+git clone https://github.com/codebestia/nift.git
 cd nift
 cd frontend
-\`\`\`
+```
 
 2. Install dependencies:
-\`\`\`bash
+```bash
 npm install
 # or
 yarn install
-\`\`\`
+```
 
 3. Run the development server:
-\`\`\`bash
+```bash
 npm run dev
 # or
 yarn dev
-\`\`\`
+```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
