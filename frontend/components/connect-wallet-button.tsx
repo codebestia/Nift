@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Wallet } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
 
 import { StarknetkitConnector, useStarknetkitConnectModal } from 'starknetkit';
 import { useToast } from '@/hooks/use-toast';
+import { ReconnectorContext } from '@/context/reconnector';
 
 export function ConnectWalletButton() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -22,6 +23,7 @@ export function ConnectWalletButton() {
   const { toast } = useToast();
 
   const { connect, connectors } = useConnect();
+  const { setConnectionId } = useContext(ReconnectorContext);
   const { starknetkitConnectModal } = useStarknetkitConnectModal({
     connectors: connectors as StarknetkitConnector[],
   });
@@ -35,6 +37,7 @@ export function ConnectWalletButton() {
     }
     try {
       await connect({ connector: connector as Connector });
+      setConnectionId(connector.id);
       setIsConnecting(false);
     } catch (error) {
       console.error(error);

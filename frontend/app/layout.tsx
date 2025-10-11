@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { StarknetProvider } from '@/components/provider';
+import { ReconnectorProvider } from '@/context/reconnector';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -25,7 +26,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <StarknetProvider>{children}</StarknetProvider>
+          <StarknetProvider>
+            <ReconnectorProvider>
+            {children}
+            </ReconnectorProvider>
+          </StarknetProvider>
         </ThemeProvider>
       </body>
     </html>
