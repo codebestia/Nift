@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -43,6 +43,7 @@ import tokenAddresses from '@/contracts/tokenAddresses';
 import { getETHPriceEquivalent, getSTRKPriceEquivalent } from '@/lib/prices';
 import { useDeployContract } from '@/hooks/useDeployContract';
 import {
+  useAccount,
   useContract,
   useSendTransaction,
   useTransactionReceipt,
@@ -51,6 +52,8 @@ import { Functions } from '@/utils/functions';
 import { useToast } from '@/hooks/use-toast';
 import { useTokenABI } from '@/hooks/useDeployedToken';
 import { isThisQuarter } from 'date-fns';
+import {constants} from 'starknet';
+import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
 
 type GiftResultType = {
   id: number;
@@ -78,6 +81,9 @@ export function PurchaseForm() {
   const [currentAmount, setCurrentAmount] = useState<bigint>(BigInt(0));
   const [usdValue, setUsdValue] = useState(0);
   const { toast } = useToast();
+  const {account} = useAccount();
+  const deployedContract = useDeployContract();
+  const tokenABI = useTokenABI();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,55 +92,85 @@ export function PurchaseForm() {
       amount: '',
     },
   });
-  const deployedContract = useDeployContract();
-  const tokenABI = useTokenABI();
-  const { contract } = useContract({
-    abi: deployedContract?.abi,
-    address: deployedContract?.address,
-  });
-  const {contract: tokenContract} = useContract({
-    abi: tokenABI,
-    address: currentToken
-  })
-  const calls = useCallback(() => {
-    if (!contract || !tokenContract) {
-      console.log('Could not get contract data');
-      return;
+
+  const {writeAsync: tokenWriteAsync, isLoading: isTokenCallLoading} = useNiftWriteContract({
+    contractConfig: {
+      abi: tokenABI,
+      address: `${currentToken}`
+    },
+    functionName: 'approve',
+    onSuccess: (data) => {
+      purchaseGiftCard();
+    },
+    onError: (err) => {
+      toast({
+        title: 'Token Approval error',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
     }
-    return [
-      tokenContract.populate(
-        'approve',
-        [
-          currentAmount,
-          deployedContract?.address
-        ]
-      ),
-      contract.populate(Functions.purchaseGiftCard, [
-        currentToken,
-        currentAmount,
-      ]),
-    ];
-  }, [deployedContract, contract, currentAmount, currentToken]);
-  const { send, sendAsync, data, error, isPending } = useSendTransaction({
-    calls: calls(),
-  });
-  const {
-    data: waitData,
-    status: waitStatus,
-    error: waitError,
-    isLoading: waitIsLoading,
-    isError: waitIsError,
-  } = useTransactionReceipt({
-    watch: true,
-    hash: data?.transaction_hash,
-  });
+  })
+  
+
+  const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useNiftWriteContract({
+    contractConfig: {
+      abi: deployedContract?.abi,
+      address: deployedContract?.address
+    },
+    functionName: Functions.purchaseGiftCard,
+    onSuccess: (data) => {
+      setIsProcessing(false);
+      setIsPurchased(true);
+      setCurrentToken(undefined);
+      setCurrentAmount(BigInt(0));
+      form.reset();
+    },
+    onError: (err) => {
+      toast({
+        title: 'Purchase error',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
+      setIsProcessing(false);
+    }
+  })
+  
+  async function purchaseGiftCard() {
+    try {
+      await writeAsync({
+        token: currentToken as `0x${string}`,
+        amount: currentAmount,
+      })
+    } catch (error) {
+      console.error('Error purchasing gift card:', error);
+      setIsProcessing(false);
+      toast({
+        title: 'Purchase error',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
+    }
+
+  }
   async function onSubmit(values: z.infer<typeof formSchema>) {
+
     setCurrentToken(values.token);
-    setCurrentAmount(BigInt(Number(values.amount) * (10 ** 18)));
+    setCurrentAmount(BigInt(parseFloat(values.amount) * Math.pow(10, 18)));
     setIsProcessing(true);
-    let result = await sendAsync(calls()); // send data to smart contract
-    setIsProcessing(false);
-    setIsPurchased(true);
+    try {
+      await tokenWriteAsync({
+        spender: deployedContract?.address as `0x${string}`,
+        amount: BigInt(Number(values.amount) * (10 ** 18))
+      })
+    } catch (error) {
+      console.error('Error approving token:', error);
+      setIsProcessing(false);
+      toast({
+        title: 'Token Approval error',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
+    }
   }
 
   function handleClose() {
@@ -156,27 +192,6 @@ export function PurchaseForm() {
       fetchUsdValue(form.watch('token'), form.watch('amount'));
     }
   }, [form.watch('token'), form.watch('amount')]);
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: 'Smart contract error',
-        description: 'Please try again',
-        variant: 'destructive',
-      });
-    }
-  }, [error]);
-  useEffect(() => {
-    if (waitStatus == 'error') {
-      toast({
-        title: 'Transaction Error',
-        description: 'Error',
-        variant: 'destructive',
-      });
-    }
-  }, [waitStatus]);
-  useEffect(() => {
-    setIsProcessing(isPending);
-  }, [isPending]);
   return (
     <>
       <Card className='border border-purple-800/30 bg-card'>
@@ -263,13 +278,7 @@ export function PurchaseForm() {
             <DialogDescription>
               {waitIsLoading
                 ? 'Waiting for confimration'
-                : waitIsError
-                  ? 'Transaction rejected'
-                  : waitStatus == 'error'
-                    ? 'Transaction rejected'
-                    : waitStatus == 'success'
-                      ? 'Transaction successful'
-                      : 'Please wait while we process your transaction. This may take a moment.'}
+                : 'Please wait while we process your transaction. This may take a moment.'}
             </DialogDescription>
           </DialogHeader>
           <div className='flex justify-center py-8'>

@@ -7,6 +7,8 @@ import { useAccount } from '@starknet-react/core';
 import ConnectWalletNeeded from '@/components/connect-wallet-needed';
 import { useDeployContract } from '@/hooks/useDeployContract';
 import ContractNotDeployed from '@/components/contract-not-deployed';
+import { useNiftReadContract } from '@/hooks/useNiftContractRead';
+import { GiftCard } from '@/types/gift-card';
 
 export default function DashboardPage() {
   const [numberOfGiftsPurchased, setNumberOfGiftsPurchased] = useState(0);
@@ -20,27 +22,14 @@ export default function DashboardPage() {
   if (!deployedContract) {
     return <ContractNotDeployed />;
   }
-  const {
-    data: pointsData,
-    isLoading: isLoadingPoints,
-    isError: isErrorPoints,
-  } = useReadContract({
+
+  const {data: pointsData} = useNiftReadContract<number>({
     functionName: Functions.getUserPoints,
-    address: deployedContract?.address,
-    abi: deployedContract?.abi,
-    watch: true,
     args: [address],
   });
 
-  const {
-    data: purchasedGifts,
-    isLoading: isLoadingPurchasedData,
-    isError: isPurchasedDataPoints,
-  } = useReadContract({
+  const {data: purchasedGifts} = useNiftReadContract<GiftCard[]>({
     functionName: Functions.getUserPurchasedGifts,
-    address: deployedContract?.address,
-    abi: deployedContract?.abi,
-    watch: true,
     args: [address],
   });
   const loadAnalyticsData = () => {};

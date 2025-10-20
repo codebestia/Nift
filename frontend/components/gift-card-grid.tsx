@@ -155,7 +155,7 @@ export function GiftCardGrid({
       ) : (
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {giftCards.map(tokenId => (
-            <GiftCardWidget tokenId={tokenId} handleSendGift={handleSendGift} />
+            <GiftCardWidget key={tokenId} tokenId={tokenId} handleSendGift={handleSendGift} />
           ))}
         </div>
       )}
