@@ -23,12 +23,12 @@ import CardSkeleton from './card-skeleton';
 import { useTokenABI } from '@/hooks/useDeployedToken';
 
 type RedeemGiftCardWidgetProps = {
-  tokenId: number;
+  token_id: number;
   handleRedeem: (card: GiftCard | undefined) => void;
 };
 
 const RedeemGiftCardWidget = ({
-  tokenId,
+  token_id,
   handleRedeem,
 }: RedeemGiftCardWidgetProps) => {
   const [card, setCard] = useState<GiftCard | undefined>(undefined);
@@ -43,7 +43,7 @@ const RedeemGiftCardWidget = ({
     address: deployedContract?.address,
     abi: deployedContract?.abi,
     watch: true,
-    args: [tokenId],
+    args: [token_id],
   });
   const tokenABI = useTokenABI();
   const { data: tokenName } = useReadContract({
@@ -88,7 +88,7 @@ const RedeemGiftCardWidget = ({
               <div className='absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4'>
                 <div className='flex items-center justify-end'>
                   <a
-                    href={`https://voyager.io/token/${card.tokenId}`}
+                    href={`https://voyager.io/token/${card?.token_id ?? ""}`}
                     target='_blank'
                     rel='noopener noreferrer'
                     className='text-xs text-white/70 hover:text-white flex items-center gap-1'
@@ -103,7 +103,7 @@ const RedeemGiftCardWidget = ({
             <CardTitle className='flex items-center justify-between'>
               <span>{tokenSymbol} Gift Card</span>
               <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
-                {card.tokenId}
+                {card?.token_id}
               </span>
             </CardTitle>
             <div className='space-y-1'>
@@ -114,7 +114,7 @@ const RedeemGiftCardWidget = ({
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
-                  {card.amount} {tokenSymbol}
+                  {card?.token_amount} {tokenSymbol}
                 </span>
               </div>
               <div className='flex items-center justify-between'>

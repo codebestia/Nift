@@ -34,6 +34,8 @@ import ContractNotDeployed from './contract-not-deployed';
 import { Functions } from '@/utils/functions';
 import { GiftCard } from '@/types/gift-card';
 import { useRouter } from 'next/navigation';
+import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
+import { toast } from '@/hooks/use-toast';
 
 export function RedeemGiftCards() {
   const router = useRouter();
@@ -62,37 +64,25 @@ export function RedeemGiftCards() {
     watch: true,
     args: [address],
   });
-  const { contract } = useContract({
-    abi: deployedContract?.abi,
-    address: deployedContract?.address,
-  });
-  const calls = useCallback(() => {
-    if (!contract) {
-      console.error('Could not get contract data');
-      return;
+  const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useNiftWriteContract({
+    contractConfig: {
+      abi: deployedContract?.abi,
+      address: deployedContract?.address
+    },
+    functionName: Functions.redeemGiftCard,
+    onSuccess: (data) => {
+      setProcessingDialogOpen(false);
+      setCompleteDialogOpen(true);
+    },
+    onError: (err) => {
+      toast({
+        title: 'Purchase error',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
+      setProcessingDialogOpen(false);
     }
-    return [contract.populate(Functions.redeemGiftCard, [])];
-  }, [deployedContract, contract, selectedCard]);
-  const {
-    send,
-    sendAsync,
-    data,
-    error: sendError,
-    isPending,
-  } = useSendTransaction({
-    calls: calls(),
-  });
-  const {
-    data: waitData,
-    status: waitStatus,
-    error: waitError,
-    isLoading: waitIsLoading,
-    isError: waitIsError,
-  } = useTransactionReceipt({
-    watch: true,
-    hash: data?.transaction_hash,
-  });
-
+  })
   useEffect(() => {
     if (Array.isArray(giftsData)) {
       setGiftCards(giftsData);
@@ -100,8 +90,8 @@ export function RedeemGiftCards() {
   }, [giftsData]);
   useEffect(() => {
     if (isErrorGifts) {
-      console.error('Error getting user gift token ids');
-      console.error(error);
+      console.log('Error getting user gift token ids');
+      console.log(error);
     }
   }, [isErrorGifts]);
 
@@ -112,19 +102,15 @@ export function RedeemGiftCards() {
   };
 
   const handleConfirmRedeem = async () => {
-    if (!contract) {
-      console.error('Could not get contract data');
-      return;
-    }
+    
     setConfirmDialogOpen(false);
     setProcessingDialogOpen(true);
 
-    await sendAsync([
-      contract.populate(Functions.redeemGiftCard, [selectedCard?.token_id]),
-    ]);
+    await writeAsync({
+      token_id: selectedCard?.token_id
+    });
 
-    setProcessingDialogOpen(false);
-    setCompleteDialogOpen(true);
+    
   };
 
   return (
@@ -159,7 +145,8 @@ export function RedeemGiftCards() {
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {giftCards.map(tokenId => (
             <RedeemGiftCardWidget
-              tokenId={tokenId}
+              key={tokenId}
+              token_id={tokenId}
               handleRedeem={handleRedeem}
             />
           ))}
@@ -183,7 +170,7 @@ export function RedeemGiftCards() {
                   <div className='relative aspect-[4/3] bg-black/20'>
                     <Image
                       src={selectedCard.image || '/placeholder.svg'}
-                      alt={selectedCard.name}
+                      alt={selectedCard.token ?? "gift card"}
                       fill
                       className='object-cover'
                     />
@@ -200,13 +187,13 @@ export function RedeemGiftCards() {
                     <div className='flex items-center justify-between'>
                       <span className='text-sm text-zinc-400'>Amount</span>
                       <span className='font-medium'>
-                        {selectedCard.amount} {selectedCard.token}
+                        {selectedCard.token_amount} {selectedCard.token}
                       </span>
                     </div>
                     <div className='flex items-center justify-between'>
                       <span className='text-sm text-zinc-400'>Value</span>
                       <span className='text-sm text-zinc-300'>
-                        ${selectedCard.value.toLocaleString()} USD
+                        ${selectedCard.value?.toLocaleString() ?? 0} USD
                       </span>
                     </div>
                   </div>
@@ -279,7 +266,7 @@ export function RedeemGiftCards() {
                   <div className='flex items-center justify-between'>
                     <span className='font-medium'>Amount</span>
                     <span>
-                      {selectedCard.amount} {selectedCard.token}
+                      {selectedCard.token_amount} {selectedCard.token}
                     </span>
                   </div>
                   <div className='flex items-center justify-between'>

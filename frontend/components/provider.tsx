@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 
-import { sepolia, mainnet, devnet } from '@starknet-react/chains';
+import { sepolia, mainnet, devnet, Chain } from '@starknet-react/chains';
 import { supportedChains } from '@/utils/supportedChains';
 import {
   StarknetConfig,
@@ -10,7 +10,15 @@ import {
   braavos,
   useInjectedConnectors,
   voyager,
+  jsonRpcProvider,
 } from '@starknet-react/core';
+
+const rpc = (chain: Chain) => {
+  
+  return {
+    nodeUrl:`https://starknet-${chain.network.toLowerCase()}.public.blastapi.io/rpc/v0_8`
+  }
+}
 
 export function StarknetProvider({ children }: { children: React.ReactNode }) {
   const { connectors } = useInjectedConnectors({
@@ -25,7 +33,7 @@ export function StarknetProvider({ children }: { children: React.ReactNode }) {
   return (
     <StarknetConfig
       chains={[sepolia]}
-      provider={publicProvider()}
+      provider={jsonRpcProvider({rpc})}
       connectors={connectors}
       explorer={voyager}
     >
