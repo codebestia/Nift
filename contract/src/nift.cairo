@@ -12,7 +12,10 @@ pub mod Nift {
         Map, MutableVecTrait, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait,
     };
-    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, get_block_number};
+    use starknet::{
+        ContractAddress, get_block_number, get_block_timestamp, get_caller_address,
+        get_contract_address,
+    };
     use crate::interface::INift;
     use crate::types::{Gift, GiftStatus};
 
@@ -253,7 +256,7 @@ pub mod Nift {
         fn generate_category_id(self: @ContractState) -> u64 {
             let timestamp = get_block_timestamp();
             let block_number = get_block_number();
-            let category_id = timestamp  * block_number;
+            let category_id = timestamp * block_number;
             category_id % 20 // limit to 20 categories
         }
     }
