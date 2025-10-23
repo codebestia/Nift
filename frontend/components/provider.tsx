@@ -13,7 +13,7 @@ import {
   jsonRpcProvider,
 } from '@starknet-react/core';
 
-const rpc = (chain: Chain) => {
+export const rpc = (chain: Chain) => {
   
   return {
     nodeUrl:`https://starknet-${chain.network.toLowerCase()}.public.blastapi.io/rpc/v0_8`

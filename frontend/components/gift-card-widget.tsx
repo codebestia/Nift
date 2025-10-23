@@ -26,6 +26,10 @@ import { useDeployContract } from '@/hooks/useDeployContract';
 import CardSkeleton from './card-skeleton';
 import { getETHPriceEquivalent, getSTRKPriceEquivalent } from '@/lib/prices';
 import { useTokenABI } from '@/hooks/useDeployedToken';
+import { contractAddressToHex, readContractFunction, truncateAddress } from '@/contracts/functions';
+import { get } from 'http';
+import { formatTokenAmount } from '@/contracts/functions';
+import { getCardImageById } from '@/utils/asset';
 
 type GiftCardWidgetProps = {
   tokenId: number;
@@ -42,21 +46,18 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
     isError: isErrorGift,
     error,
   } = useReadContract({
-    functionName: Functions.getGiftInfo,
+    functionName: Functions.getGiftCardInfo,
     address: deployedContract?.address,
     abi: deployedContract?.abi,
     watch: true,
     args: [tokenId],
   });
-  const { data: tokenSymbol } = useReadContract({
-    functionName: 'symbol',
-    address: giftData?.token_contract ?? '0x0',
-    abi: tokenABI,
-    watch: true
-  });
   useEffect(() => {
     if (giftData) {
+      console.log('Gift Data:', giftData);
+      console.log('Gift Data id:', giftData.category_id);
       setCard(giftData);
+
     }
   }, [giftData]);
   useEffect(() => {
@@ -78,8 +79,8 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
           <CardHeader className='p-0'>
             <div className='relative aspect-square bg-black/20'>
               <Image
-                src={'/placeholder.svg'}
-                alt={`${tokenSymbol ?? "Loading..."}`}
+                src={card?.category_id ? getCardImageById(Number(card?.category_id )): '/placeholder.svg'}
+                alt={`${card?.token_symbol ?? "Loading..."}`}
                 fill
                 className='object-cover'
               />
@@ -116,30 +117,36 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
           </CardHeader>
           <CardContent className='p-4 space-y-3'>
             <CardTitle className='flex items-center justify-between'>
-              <span>{tokenSymbol ?? "..."} Gift Card</span>
+              <span>NIFT Gift Card</span>
               <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
-                {card?.token_id}
+                #{card?.token_id}
               </span>
             </CardTitle>
             <div className='space-y-1'>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Token</span>
-                <span className='font-medium'>{tokenSymbol ?? "Loading..."}</span>
+                <span className='font-medium'>{card?.token_symbol ?? "STRK"}</span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
-                  {card?.token_amount} {tokenSymbol ?? "Loading..."}
+                  {formatTokenAmount(BigInt(card?.token_amount ?? 0))} {card?.token_symbol ?? "STRK"}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Value</span>
                 <span className='text-sm text-zinc-300'>
-                  ${tokenSymbol == "ETH" ?(
-                    getETHPriceEquivalent(card?.token_amount ?? 0)
-                  ): tokenSymbol == "STRK"? (
-                    getSTRKPriceEquivalent(card?.token_amount ?? 0)
+                  ${card?.token_symbol == "ETH" ?(
+                    getETHPriceEquivalent(Number(formatTokenAmount(BigInt(card?.token_amount ?? 0))))
+                  ): card?.token_symbol == "STRK"? (
+                    getSTRKPriceEquivalent(Number(formatTokenAmount(BigInt(card?.token_amount ?? 0))))
                   ):(0)}
+                </span>
+              </div>
+              <div className='flex items-center justify-between'>
+                <span className='text-sm text-zinc-400'>Minted by</span>
+                <span className='text-sm text-zinc-300'>
+                  ${truncateAddress(contractAddressToHex(card?.minter ?? 0))}
                 </span>
               </div>
             </div>

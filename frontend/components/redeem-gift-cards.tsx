@@ -36,6 +36,7 @@ import { GiftCard } from '@/types/gift-card';
 import { useRouter } from 'next/navigation';
 import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
 import { toast } from '@/hooks/use-toast';
+import { formatTokenAmount } from '@/contracts/functions';
 
 export function RedeemGiftCards() {
   const router = useRouter();
@@ -178,16 +179,16 @@ export function RedeemGiftCards() {
                   <div className='p-4 space-y-2'>
                     <div className='flex items-center justify-between'>
                       <span className='font-medium'>
-                        {selectedCard.token} Gift Card
+                        NIFT Gift Card
                       </span>
                       <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
-                        {selectedCard.token_id}
+                        # {selectedCard.token_id}
                       </span>
                     </div>
                     <div className='flex items-center justify-between'>
                       <span className='text-sm text-zinc-400'>Amount</span>
                       <span className='font-medium'>
-                        {selectedCard.token_amount} {selectedCard.token}
+                        {formatTokenAmount(BigInt(selectedCard.token_amount))} {selectedCard.token_symbol ?? "STRK"}
                       </span>
                     </div>
                     <div className='flex items-center justify-between'>

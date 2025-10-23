@@ -5,6 +5,8 @@ export type GiftCard = {
   token?: string;
   token_contract: string;
   token_amount: number;
+  token_symbol: string;
   token_id: string;
+  category_id?: BigInt;
   value?: string;
 };

@@ -9,6 +9,7 @@ import { useDeployContract } from '@/hooks/useDeployContract';
 import ConnectWalletNeeded from '@/components/connect-wallet-needed';
 import ContractNotDeployed from '@/components/contract-not-deployed';
 import { Functions } from '@/utils/functions';
+import { readContractFunction } from '@/contracts/functions';
 
 export default function MyGiftsPage() {
   const { address } = useAccount();
@@ -34,8 +35,24 @@ export default function MyGiftsPage() {
   });
 
   useEffect(() => {
+    const fetchGiftCards = async () => {
+      // giftsData is an array of BigInt
+      if (!giftsData) return;
+      const tokenIds = giftsData.map((gift: BigInt) => Number(gift));
+      const cards: GiftCard[] = [];
+      for (const id of tokenIds) {
+        let data = await readContractFunction({
+              functionName: Functions.getGiftCardInfo,
+              contractAddress: deployedContract.address,
+              abi: deployedContract.abi,
+              args: [id],
+        }) as GiftCard;
+        cards.push(data);
+      }
+    }
     if (Array.isArray(giftsData)) {
-      setGiftCards(giftsData);
+      const cards = giftsData.map((gift: BigInt) => Number(gift));
+      setGiftCards(cards);
     }
   }, [giftsData]);
   useEffect(() => {
