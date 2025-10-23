@@ -1,40 +1,39 @@
-'use client'
+'use client';
 
 import {
   useSendTransaction,
   useTransactionReceipt,
   useAccount,
-} from '@starknet-react/core'
-import { useCallback, useState, useMemo } from 'react'
-import type { InvokeFunctionResponse } from 'starknet'
-import { Contract, Abi } from 'starknet'
+} from '@starknet-react/core';
+import { useCallback, useState, useMemo } from 'react';
+import type { InvokeFunctionResponse } from 'starknet';
+import { Contract, Abi } from 'starknet';
 
-
-export type ContractFunctionArgs = Record<string, unknown>
+export type ContractFunctionArgs = Record<string, unknown>;
 
 export interface ContractConfig {
-  address: string
-  abi: Abi
+  address: string;
+  abi: Abi;
 }
 
 interface MulticallCall {
-  contractConfig: ContractConfig
-  functionName: string
-  args: ContractFunctionArgs
+  contractConfig: ContractConfig;
+  functionName: string;
+  args: ContractFunctionArgs;
 }
 
 interface UseMulticallProps {
-  onSuccess?: (data: InvokeFunctionResponse) => void
-  onError?: (error: Error) => void
+  onSuccess?: (data: InvokeFunctionResponse) => void;
+  onError?: (error: Error) => void;
 }
 
 interface MulticallResult {
-  writeAsync: (calls: MulticallCall[]) => Promise<InvokeFunctionResponse>
-  data: InvokeFunctionResponse | undefined
-  error: Error | null
-  isLoading: boolean
-  isSuccess: boolean
-  reset: () => void
+  writeAsync: (calls: MulticallCall[]) => Promise<InvokeFunctionResponse>;
+  data: InvokeFunctionResponse | undefined;
+  error: Error | null;
+  isLoading: boolean;
+  isSuccess: boolean;
+  reset: () => void;
 }
 
 /**
@@ -44,8 +43,8 @@ export function useMulticall({
   onSuccess,
   onError,
 }: UseMulticallProps = {}): MulticallResult {
-  const [lastTransactionHash, setLastTransactionHash] = useState<string>()
-  const { account } = useAccount()
+  const [lastTransactionHash, setLastTransactionHash] = useState<string>();
+  const { account } = useAccount();
 
   const {
     sendAsync,
@@ -55,7 +54,7 @@ export function useMulticall({
     reset: resetTransaction,
   } = useSendTransaction({
     calls: undefined,
-  })
+  });
 
   // Track transaction receipt
   const {
@@ -65,12 +64,12 @@ export function useMulticall({
   } = useTransactionReceipt({
     hash: lastTransactionHash,
     watch: !!lastTransactionHash,
-  })
+  });
 
   const writeAsync = useCallback(
     async (calls: MulticallCall[]): Promise<InvokeFunctionResponse> => {
       if (!calls || calls.length === 0) {
-        throw new Error('No calls provided for multicall')
+        throw new Error('No calls provided for multicall');
       }
 
       // if (!account) {
@@ -78,16 +77,16 @@ export function useMulticall({
       // }
 
       try {
-        console.log('🔍 Multicall Debug Info:')
-        console.log('Number of calls:', calls.length)
+        console.log('🔍 Multicall Debug Info:');
+        console.log('Number of calls:', calls.length);
 
         // Create contract instances and populate calls
         const populatedCalls = calls.map((call, index) => {
           // Validate contract config
           if (!call.contractConfig.address || !call.contractConfig.abi) {
             throw new Error(
-              `Invalid contract config for call ${index + 1}: missing address or ABI`,
-            )
+              `Invalid contract config for call ${index + 1}: missing address or ABI`
+            );
           }
 
           // Create contract instance using Contract constructor
@@ -96,52 +95,52 @@ export function useMulticall({
             call.contractConfig.address.startsWith('0x')
               ? call.contractConfig.address
               : `0x${call.contractConfig.address}`,
-            account,
-          )
+            account
+          );
 
           // Convert args object to array format and ensure correct type
           const calldata = Object.values(call.args) as (
             | string
             | number
             | bigint
-          )[]
+          )[];
 
-          console.log(`📋 Call ${index + 1}:`)
-          console.log('  Contract Address:', call.contractConfig.address)
-          console.log('  Function Name:', call.functionName)
-          console.log('  Arguments:', call.args)
-          console.log('  Calldata:', calldata)
+          console.log(`📋 Call ${index + 1}:`);
+          console.log('  Contract Address:', call.contractConfig.address);
+          console.log('  Function Name:', call.functionName);
+          console.log('  Arguments:', call.args);
+          console.log('  Calldata:', calldata);
 
           // Use contract.populate
-          return contract.populate(call.functionName, calldata)
-        })
+          return contract.populate(call.functionName, calldata);
+        });
 
         console.log(
           '📤 Sending multicall transaction with calls:',
-          populatedCalls,
-        )
+          populatedCalls
+        );
 
-        const result = await sendAsync(populatedCalls)
-        setLastTransactionHash(result.transaction_hash)
+        const result = await sendAsync(populatedCalls);
+        setLastTransactionHash(result.transaction_hash);
 
-        console.log('✅ Multicall transaction sent:', result)
+        console.log('✅ Multicall transaction sent:', result);
 
         if (onSuccess) {
-          onSuccess(result)
+          onSuccess(result);
         }
 
-        return result
+        return result;
       } catch (error) {
-        console.error('❌ Multicall transaction error:', error)
+        console.error('❌ Multicall transaction error:', error);
 
-        let errorMessage = 'Multicall transaction failed'
-        let isUserRejection = false
+        let errorMessage = 'Multicall transaction failed';
+        let isUserRejection = false;
 
         if (error instanceof Error) {
-          const msg = error.message.toLowerCase()
-          const originalMessage = error.message
+          const msg = error.message.toLowerCase();
+          const originalMessage = error.message;
 
-          console.log('Original error message:', originalMessage)
+          console.log('Original error message:', originalMessage);
 
           if (
             msg.includes('user rejected') ||
@@ -150,81 +149,81 @@ export function useMulticall({
             msg.includes('rejected by user') ||
             msg.includes('user abort')
           ) {
-            errorMessage = 'Transaction was rejected by user'
-            isUserRejection = true
+            errorMessage = 'Transaction was rejected by user';
+            isUserRejection = true;
           } else if (
             msg.includes('insufficient funds') ||
             msg.includes('insufficient balance')
           ) {
             errorMessage =
-              'Insufficient funds to complete multicall transaction'
+              'Insufficient funds to complete multicall transaction';
           } else if (msg.includes('network') || msg.includes('fetch')) {
             errorMessage =
-              'Network error: Please check your connection and try again'
+              'Network error: Please check your connection and try again';
           } else if (msg.includes('nonce')) {
-            errorMessage = 'Nonce error: Please try again'
+            errorMessage = 'Nonce error: Please try again';
           } else if (
             msg.includes('contract not found') ||
             msg.includes('class_hash_not_found')
           ) {
             errorMessage =
-              'Contract not found: Please check the contract addresses'
+              'Contract not found: Please check the contract addresses';
           } else if (msg.includes('entry point not found')) {
-            errorMessage = 'One or more functions not found in contracts'
+            errorMessage = 'One or more functions not found in contracts';
           } else {
-            errorMessage = `${originalMessage} (Original error preserved for debugging)`
+            errorMessage = `${originalMessage} (Original error preserved for debugging)`;
           }
         }
 
-        const processedError = new Error(errorMessage)
+        const processedError = new Error(errorMessage);
         // Add original error for debugging
-        ;(processedError as any).originalError = error
-        ;(processedError as any).isUserRejection = isUserRejection
+        (processedError as any).originalError = error;
+        (processedError as any).isUserRejection = isUserRejection;
 
         if (onError) {
-          onError(processedError)
+          onError(processedError);
         }
-        throw processedError
+        throw processedError;
       }
     },
-    [account, sendAsync, onSuccess, onError],
-  )
+    [account, sendAsync, onSuccess, onError]
+  );
 
   const reset = useCallback(() => {
-    resetTransaction()
-    setLastTransactionHash(undefined)
-  }, [resetTransaction])
+    resetTransaction();
+    setLastTransactionHash(undefined);
+  }, [resetTransaction]);
 
   // Process errors for better user experience
   const processedError = useMemo(() => {
-    const error = transactionError || receiptError
-    if (!error) return null
+    const error = transactionError || receiptError;
+    if (!error) return null;
 
-    const errorMessage = error.message || error.toString()
+    const errorMessage = error.message || error.toString();
 
     if (
       errorMessage.includes('user rejected') ||
       errorMessage.includes('user denied')
     ) {
-      return new Error('Transaction was rejected by user')
+      return new Error('Transaction was rejected by user');
     }
 
     if (errorMessage.includes('insufficient funds')) {
-      return new Error('Insufficient funds to complete transaction')
+      return new Error('Insufficient funds to complete transaction');
     }
 
     if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
       return new Error(
-        'Network error: Please check your connection and try again',
-      )
+        'Network error: Please check your connection and try again'
+      );
     }
 
-    return error as Error
-  }, [transactionError, receiptError])
+    return error as Error;
+  }, [transactionError, receiptError]);
 
   // Determine success state
-  const isSuccess = !!(receiptData && !receiptError)
-  const isLoading = isTransactionPending || isReceiptLoading
+  const isSuccess = !!(receiptData && !receiptError);
+  const isLoading = isTransactionPending || isReceiptLoading;
 
   return {
     writeAsync,
@@ -233,5 +232,5 @@ export function useMulticall({
     isLoading,
     isSuccess,
     reset,
-  }
+  };
 }

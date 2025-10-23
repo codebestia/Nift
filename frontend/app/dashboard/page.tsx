@@ -23,12 +23,12 @@ export default function DashboardPage() {
     return <ContractNotDeployed />;
   }
 
-  const {data: pointsData} = useNiftReadContract<number>({
+  const { data: pointsData } = useNiftReadContract<number>({
     functionName: Functions.getUserPoints,
     args: [address],
   });
 
-  const {data: purchasedGifts} = useNiftReadContract<GiftCard[]>({
+  const { data: purchasedGifts } = useNiftReadContract<GiftCard[]>({
     functionName: Functions.getUserPurchasedGifts,
     args: [address],
   });

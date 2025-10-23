@@ -27,9 +27,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <StarknetProvider>
-            <ReconnectorProvider>
-            {children}
-            </ReconnectorProvider>
+            <ReconnectorProvider>{children}</ReconnectorProvider>
           </StarknetProvider>
         </ThemeProvider>
       </body>

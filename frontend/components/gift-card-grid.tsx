@@ -64,25 +64,29 @@ export function GiftCardGrid({
   const [transactionHash, setTransactionHash] = useState('');
   const { address } = useAccount();
 
-  const deployedContract = useDeployContract()
+  const deployedContract = useDeployContract();
 
-  const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useNiftWriteContract({
-      contractConfig: {
-        abi: deployedContract?.abi,
-        address: deployedContract?.address
-      },
-      functionName: Functions.sendGiftCard,
-      onSuccess: (data) => {
-        setProcessingDialogOpen(false);
-        setTransactionHash(data.transaction_hash);
-        setCompleteDialogOpen(true);
-      },
-      onError: (err) => {
-        console.error('Error sending gift card:', err);
-        setProcessingDialogOpen(false);
-        resetDialogs();
-      }
-    })
+  const {
+    writeAsync,
+    isLoading: waitIsLoading,
+    error: waitIsError,
+  } = useNiftWriteContract({
+    contractConfig: {
+      abi: deployedContract?.abi,
+      address: deployedContract?.address,
+    },
+    functionName: Functions.sendGiftCard,
+    onSuccess: data => {
+      setProcessingDialogOpen(false);
+      setTransactionHash(data.transaction_hash);
+      setCompleteDialogOpen(true);
+    },
+    onError: err => {
+      console.error('Error sending gift card:', err);
+      setProcessingDialogOpen(false);
+      resetDialogs();
+    },
+  });
 
   const handleSendGift = (card: GiftCard | undefined) => {
     if (!card) return;
@@ -100,8 +104,8 @@ export function GiftCardGrid({
     writeAsync({
       from: address,
       to: recipientAddress,
-      token_id: selectedCard.token_id
-    })
+      token_id: selectedCard.token_id,
+    });
   };
 
   const resetDialogs = () => {
@@ -175,7 +179,11 @@ export function GiftCardGrid({
       ) : (
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {giftCards.map(tokenId => (
-            <GiftCardWidget key={tokenId} tokenId={tokenId} handleSendGift={handleSendGift} />
+            <GiftCardWidget
+              key={tokenId}
+              tokenId={tokenId}
+              handleSendGift={handleSendGift}
+            />
           ))}
         </div>
       )}
@@ -202,7 +210,9 @@ export function GiftCardGrid({
                   />
                 </div>
                 <div>
-                  <h4 className='font-medium'>{truncateAddress(contractAddressToHex(selectedCard.minter))}</h4>
+                  <h4 className='font-medium'>
+                    {truncateAddress(contractAddressToHex(selectedCard.minter))}
+                  </h4>
                   <p className='text-sm text-muted-foreground'>
                     {selectedCard.token_amount} {selectedCard.token} ($
                     {selectedCard.value})

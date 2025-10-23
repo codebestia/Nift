@@ -65,25 +65,29 @@ export function RedeemGiftCards() {
     watch: true,
     args: [address],
   });
-  const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useNiftWriteContract({
+  const {
+    writeAsync,
+    isLoading: waitIsLoading,
+    error: waitIsError,
+  } = useNiftWriteContract({
     contractConfig: {
       abi: deployedContract?.abi,
-      address: deployedContract?.address
+      address: deployedContract?.address,
     },
     functionName: Functions.redeemGiftCard,
-    onSuccess: (data) => {
+    onSuccess: data => {
       setProcessingDialogOpen(false);
       setCompleteDialogOpen(true);
     },
-    onError: (err) => {
+    onError: err => {
       toast({
         title: 'Purchase error',
         description: 'Please try again',
         variant: 'destructive',
       });
       setProcessingDialogOpen(false);
-    }
-  })
+    },
+  });
   useEffect(() => {
     if (Array.isArray(giftsData)) {
       setGiftCards(giftsData);
@@ -103,15 +107,12 @@ export function RedeemGiftCards() {
   };
 
   const handleConfirmRedeem = async () => {
-    
     setConfirmDialogOpen(false);
     setProcessingDialogOpen(true);
 
     await writeAsync({
-      token_id: selectedCard?.token_id
+      token_id: selectedCard?.token_id,
     });
-
-    
   };
 
   return (
@@ -171,16 +172,14 @@ export function RedeemGiftCards() {
                   <div className='relative aspect-[4/3] bg-black/20'>
                     <Image
                       src={selectedCard.image || '/placeholder.svg'}
-                      alt={selectedCard.token ?? "gift card"}
+                      alt={selectedCard.token ?? 'gift card'}
                       fill
                       className='object-cover'
                     />
                   </div>
                   <div className='p-4 space-y-2'>
                     <div className='flex items-center justify-between'>
-                      <span className='font-medium'>
-                        NIFT Gift Card
-                      </span>
+                      <span className='font-medium'>NIFT Gift Card</span>
                       <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
                         # {selectedCard.token_id}
                       </span>
@@ -188,7 +187,8 @@ export function RedeemGiftCards() {
                     <div className='flex items-center justify-between'>
                       <span className='text-sm text-zinc-400'>Amount</span>
                       <span className='font-medium'>
-                        {formatTokenAmount(BigInt(selectedCard.token_amount))} {selectedCard.token_symbol ?? "STRK"}
+                        {formatTokenAmount(BigInt(selectedCard.token_amount))}{' '}
+                        {selectedCard.token_symbol ?? 'STRK'}
                       </span>
                     </div>
                     <div className='flex items-center justify-between'>

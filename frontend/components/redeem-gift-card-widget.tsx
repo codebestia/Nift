@@ -72,7 +72,11 @@ const RedeemGiftCardWidget = ({
           <CardHeader className='p-0'>
             <div className='relative aspect-square bg-black/20'>
               <Image
-                src={card?.category_id ? getCardImageById(Number(card.category_id )): '/placeholder.svg'}
+                src={
+                  card?.category_id
+                    ? getCardImageById(Number(card.category_id))
+                    : '/placeholder.svg'
+                }
                 alt={`${card?.token_id}`}
                 fill
                 className='object-cover'
@@ -80,7 +84,7 @@ const RedeemGiftCardWidget = ({
               <div className='absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4'>
                 <div className='flex items-center justify-end'>
                   <a
-                    href={`https://voyager.io/token/${card?.token_id ?? ""}`}
+                    href={`https://voyager.io/token/${card?.token_id ?? ''}`}
                     target='_blank'
                     rel='noopener noreferrer'
                     className='text-xs text-white/70 hover:text-white flex items-center gap-1'
@@ -93,7 +97,7 @@ const RedeemGiftCardWidget = ({
           </CardHeader>
           <CardContent className='p-4 space-y-3'>
             <CardTitle className='flex items-center justify-between'>
-              <span>{card?.token_symbol ?? "STRK"} Gift Card</span>
+              <span>{card?.token_symbol ?? 'STRK'} Gift Card</span>
               <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
                 {card?.token_id}
               </span>
@@ -101,21 +105,35 @@ const RedeemGiftCardWidget = ({
             <div className='space-y-1'>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Token</span>
-                <span className='font-medium'>{card?.token_symbol ?? "STRK"}</span>
+                <span className='font-medium'>
+                  {card?.token_symbol ?? 'STRK'}
+                </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
-                  {formatTokenAmount(BigInt(card?.token_amount ?? 0))} {card?.token_symbol ?? "STRK"}
+                  {formatTokenAmount(BigInt(card?.token_amount ?? 0))}{' '}
+                  {card?.token_symbol ?? 'STRK'}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Value</span>
-                <span className='text-sm text-zinc-300'>${card?.token_symbol == "ETH" ?(
-                                    getETHPriceEquivalent(Number(formatTokenAmount(BigInt(card?.token_amount ?? 0))))
-                                  ): card?.token_symbol == "STRK"? (
-                                    getSTRKPriceEquivalent(Number(formatTokenAmount(BigInt(card?.token_amount ?? 0))))
-                                  ):(0)}</span>
+                <span className='text-sm text-zinc-300'>
+                  $
+                  {card?.token_symbol == 'ETH'
+                    ? getETHPriceEquivalent(
+                        Number(
+                          formatTokenAmount(BigInt(card?.token_amount ?? 0))
+                        )
+                      )
+                    : card?.token_symbol == 'STRK'
+                      ? getSTRKPriceEquivalent(
+                          Number(
+                            formatTokenAmount(BigInt(card?.token_amount ?? 0))
+                          )
+                        )
+                      : 0}
+                </span>
               </div>
             </div>
           </CardContent>

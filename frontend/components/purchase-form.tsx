@@ -52,7 +52,7 @@ import { Functions } from '@/utils/functions';
 import { useToast } from '@/hooks/use-toast';
 import { useTokenABI } from '@/hooks/useDeployedToken';
 import { isThisQuarter } from 'date-fns';
-import {constants} from 'starknet';
+import { constants } from 'starknet';
 import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
 import { useMulticall } from '@/hooks/useNiftMulticall';
 
@@ -78,11 +78,13 @@ const formSchema = z.object({
 export function PurchaseForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
-  const [currentToken, setCurrentToken] = useState<`0x${string}` | string | undefined>('0x0');
+  const [currentToken, setCurrentToken] = useState<
+    `0x${string}` | string | undefined
+  >('0x0');
   const [currentAmount, setCurrentAmount] = useState<bigint>(BigInt(0));
   const [usdValue, setUsdValue] = useState(0);
   const { toast } = useToast();
-  const {account} = useAccount();
+  const { account } = useAccount();
   const deployedContract = useDeployContract();
   const tokenABI = useTokenABI();
 
@@ -135,24 +137,28 @@ export function PurchaseForm() {
   //   }
   // })
 
-  const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useMulticall({
-    onSuccess: (data) => {
+  const {
+    writeAsync,
+    isLoading: waitIsLoading,
+    error: waitIsError,
+  } = useMulticall({
+    onSuccess: data => {
       setIsProcessing(false);
       setIsPurchased(true);
       setCurrentToken(undefined);
       setCurrentAmount(BigInt(0));
       form.reset();
     },
-    onError: (err) => {
-       toast({
-          title: 'Purchase error',
-          description: 'Please try again',
-          variant: 'destructive',
-        });
-        setIsProcessing(false);
-    }
-  })
-  
+    onError: err => {
+      toast({
+        title: 'Purchase error',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
+      setIsProcessing(false);
+    },
+  });
+
   async function purchaseGiftCard(values: z.infer<typeof formSchema>) {
     try {
       await writeAsync([
@@ -164,8 +170,8 @@ export function PurchaseForm() {
           functionName: 'approve',
           args: {
             spender: deployedContract?.address as `0x${string}`,
-            amount: BigInt(Number(values.amount) * (10 ** 18))
-          } 
+            amount: BigInt(Number(values.amount) * 10 ** 18),
+          },
         },
         {
           contractConfig: {
@@ -176,8 +182,8 @@ export function PurchaseForm() {
           args: {
             token: currentToken as `0x${string}`,
             amount: currentAmount,
-          }  
-        }
+          },
+        },
       ]);
     } catch (error) {
       console.error('Error purchasing gift card:', error);
@@ -188,10 +194,8 @@ export function PurchaseForm() {
         variant: 'destructive',
       });
     }
-
   }
   async function onSubmit(values: z.infer<typeof formSchema>) {
-
     setCurrentToken(values.token);
     setCurrentAmount(BigInt(parseFloat(values.amount) * Math.pow(10, 18)));
     setIsProcessing(true);

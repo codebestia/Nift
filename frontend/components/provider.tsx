@@ -14,11 +14,10 @@ import {
 } from '@starknet-react/core';
 
 export const rpc = (chain: Chain) => {
-  
   return {
-    nodeUrl:`https://starknet-${chain.network.toLowerCase()}.public.blastapi.io/rpc/v0_8`
-  }
-}
+    nodeUrl: `https://starknet-${chain.network.toLowerCase()}.public.blastapi.io/rpc/v0_8`,
+  };
+};
 
 export function StarknetProvider({ children }: { children: React.ReactNode }) {
   const { connectors } = useInjectedConnectors({
@@ -33,7 +32,7 @@ export function StarknetProvider({ children }: { children: React.ReactNode }) {
   return (
     <StarknetConfig
       chains={[sepolia]}
-      provider={jsonRpcProvider({rpc})}
+      provider={jsonRpcProvider({ rpc })}
       connectors={connectors}
       explorer={voyager}
     >

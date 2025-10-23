@@ -41,15 +41,15 @@ export default function MyGiftsPage() {
       const tokenIds = giftsData.map((gift: BigInt) => Number(gift));
       const cards: GiftCard[] = [];
       for (const id of tokenIds) {
-        let data = await readContractFunction({
-              functionName: Functions.getGiftCardInfo,
-              contractAddress: deployedContract.address,
-              abi: deployedContract.abi,
-              args: [id],
-        }) as GiftCard;
+        let data = (await readContractFunction({
+          functionName: Functions.getGiftCardInfo,
+          contractAddress: deployedContract.address,
+          abi: deployedContract.abi,
+          args: [id],
+        })) as GiftCard;
         cards.push(data);
       }
-    }
+    };
     if (Array.isArray(giftsData)) {
       const cards = giftsData.map((gift: BigInt) => Number(gift));
       setGiftCards(cards);

@@ -26,7 +26,11 @@ import { useDeployContract } from '@/hooks/useDeployContract';
 import CardSkeleton from './card-skeleton';
 import { getETHPriceEquivalent, getSTRKPriceEquivalent } from '@/lib/prices';
 import { useTokenABI } from '@/hooks/useDeployedToken';
-import { contractAddressToHex, readContractFunction, truncateAddress } from '@/contracts/functions';
+import {
+  contractAddressToHex,
+  readContractFunction,
+  truncateAddress,
+} from '@/contracts/functions';
 import { get } from 'http';
 import { formatTokenAmount } from '@/contracts/functions';
 import { getCardImageById } from '@/utils/asset';
@@ -57,7 +61,6 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
       console.log('Gift Data:', giftData);
       console.log('Gift Data id:', giftData.category_id);
       setCard(giftData);
-
     }
   }, [giftData]);
   useEffect(() => {
@@ -79,8 +82,12 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
           <CardHeader className='p-0'>
             <div className='relative aspect-square bg-black/20'>
               <Image
-                src={card?.category_id ? getCardImageById(Number(card?.category_id )): '/placeholder.svg'}
-                alt={`${card?.token_symbol ?? "Loading..."}`}
+                src={
+                  card?.category_id
+                    ? getCardImageById(Number(card?.category_id))
+                    : '/placeholder.svg'
+                }
+                alt={`${card?.token_symbol ?? 'Loading...'}`}
                 fill
                 className='object-cover'
               />
@@ -125,22 +132,34 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
             <div className='space-y-1'>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Token</span>
-                <span className='font-medium'>{card?.token_symbol ?? "STRK"}</span>
+                <span className='font-medium'>
+                  {card?.token_symbol ?? 'STRK'}
+                </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
-                  {formatTokenAmount(BigInt(card?.token_amount ?? 0))} {card?.token_symbol ?? "STRK"}
+                  {formatTokenAmount(BigInt(card?.token_amount ?? 0))}{' '}
+                  {card?.token_symbol ?? 'STRK'}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Value</span>
                 <span className='text-sm text-zinc-300'>
-                  ${card?.token_symbol == "ETH" ?(
-                    getETHPriceEquivalent(Number(formatTokenAmount(BigInt(card?.token_amount ?? 0))))
-                  ): card?.token_symbol == "STRK"? (
-                    getSTRKPriceEquivalent(Number(formatTokenAmount(BigInt(card?.token_amount ?? 0))))
-                  ):(0)}
+                  $
+                  {card?.token_symbol == 'ETH'
+                    ? getETHPriceEquivalent(
+                        Number(
+                          formatTokenAmount(BigInt(card?.token_amount ?? 0))
+                        )
+                      )
+                    : card?.token_symbol == 'STRK'
+                      ? getSTRKPriceEquivalent(
+                          Number(
+                            formatTokenAmount(BigInt(card?.token_amount ?? 0))
+                          )
+                        )
+                      : 0}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
