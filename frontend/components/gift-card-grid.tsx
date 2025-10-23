@@ -40,6 +40,11 @@ import {
 import { GiftCard } from '@/types/gift-card';
 import GiftCardWidget from './gift-card-widget';
 import { useRouter } from 'next/navigation';
+import { contractAddressToHex, truncateAddress } from '@/contracts/functions';
+import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
+import { useDeployContract } from '@/hooks/useDeployContract';
+import { Functions } from '@/utils/functions';
+import { useAccount } from '@starknet-react/core';
 
 interface GiftCardGridProps {
   giftCards: number[];
@@ -57,6 +62,31 @@ export function GiftCardGrid({
   const [processingDialogOpen, setProcessingDialogOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [transactionHash, setTransactionHash] = useState('');
+  const { address } = useAccount();
+
+  const deployedContract = useDeployContract();
+
+  const {
+    writeAsync,
+    isLoading: waitIsLoading,
+    error: waitIsError,
+  } = useNiftWriteContract({
+    contractConfig: {
+      abi: deployedContract?.abi,
+      address: deployedContract?.address,
+    },
+    functionName: Functions.sendGiftCard,
+    onSuccess: data => {
+      setProcessingDialogOpen(false);
+      setTransactionHash(data.transaction_hash);
+      setCompleteDialogOpen(true);
+    },
+    onError: err => {
+      console.error('Error sending gift card:', err);
+      setProcessingDialogOpen(false);
+      resetDialogs();
+    },
+  });
 
   const handleSendGift = (card: GiftCard | undefined) => {
     if (!card) return;
@@ -67,21 +97,15 @@ export function GiftCardGrid({
 
   const handleSendConfirm = () => {
     if (!recipientAddress.trim()) return;
+    if (!selectedCard) return;
 
     setSendDialogOpen(false);
     setProcessingDialogOpen(true);
-
-    // Simulate transaction processing
-    setTimeout(() => {
-      setProcessingDialogOpen(false);
-      // Generate a fake transaction hash
-      setTransactionHash(
-        '0x' +
-          Math.random().toString(16).substring(2, 16) +
-          Math.random().toString(16).substring(2, 16)
-      );
-      setCompleteDialogOpen(true);
-    }, 3000);
+    writeAsync({
+      from: address,
+      to: recipientAddress,
+      token_id: selectedCard.token_id,
+    });
   };
 
   const resetDialogs = () => {
@@ -155,7 +179,11 @@ export function GiftCardGrid({
       ) : (
         <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {giftCards.map(tokenId => (
-            <GiftCardWidget key={tokenId} tokenId={tokenId} handleSendGift={handleSendGift} />
+            <GiftCardWidget
+              key={tokenId}
+              tokenId={tokenId}
+              handleSendGift={handleSendGift}
+            />
           ))}
         </div>
       )}
@@ -176,15 +204,17 @@ export function GiftCardGrid({
                 <div className='relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-purple-500/30'>
                   <Image
                     src={selectedCard.image || '/placeholder.svg'}
-                    alt={selectedCard.name}
+                    alt={selectedCard.minter}
                     fill
                     className='object-cover'
                   />
                 </div>
                 <div>
-                  <h4 className='font-medium'>{selectedCard.name}</h4>
+                  <h4 className='font-medium'>
+                    {truncateAddress(contractAddressToHex(selectedCard.minter))}
+                  </h4>
                   <p className='text-sm text-muted-foreground'>
-                    {selectedCard.amount} {selectedCard.token} ($
+                    {selectedCard.token_amount} {selectedCard.token} ($
                     {selectedCard.value})
                   </p>
                 </div>

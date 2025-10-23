@@ -16,10 +16,10 @@ type ReadContract = {
 };
 
 export interface ContractReadResult<T = unknown> {
-  data: T | undefined
-  error: Error | null
-  isLoading: boolean
-  refetch: () => void
+  data: T | undefined;
+  error: Error | null;
+  isLoading: boolean;
+  refetch: () => void;
 }
 
 type chains = 'devnet' | 'sepolia' | 'mainnet';
@@ -45,25 +45,25 @@ export const useNiftReadContract = <T = any>({
   // Enhanced refetch with error handling
   const enhancedRefetch = useCallback(async () => {
     try {
-      await refetch()
+      await refetch();
     } catch (error) {
-      console.error(`Error refetching ${functionName}:`, error)
+      console.error(`Error refetching ${functionName}:`, error);
     }
-  }, [refetch, functionName])
+  }, [refetch, functionName]);
 
   // Process error to provide more helpful messages
   const processedError = useMemo(() => {
-    if (!error) return null
+    if (!error) return null;
 
-    const errorMessage = error.message || error.toString()
+    const errorMessage = error.message || error.toString();
 
     if (
       errorMessage.includes('NetworkError') ||
       errorMessage.includes('fetch')
     ) {
       return new Error(
-        'Network error: Unable to connect to StarkNet. Please check your internet connection and try again.',
-      )
+        'Network error: Unable to connect to StarkNet. Please check your internet connection and try again.'
+      );
     }
 
     if (
@@ -71,8 +71,8 @@ export const useNiftReadContract = <T = any>({
       errorMessage.includes('CLASS_HASH_NOT_FOUND')
     ) {
       return new Error(
-        'Contract not found: The contract address may be invalid or not deployed on this network.',
-      )
+        'Contract not found: The contract address may be invalid or not deployed on this network.'
+      );
     }
 
     if (
@@ -80,17 +80,17 @@ export const useNiftReadContract = <T = any>({
       errorMessage.includes('ENTRY_POINT_NOT_FOUND')
     ) {
       return new Error(
-        `Function '${functionName}' not found in contract. Please check the function name.`,
-      )
+        `Function '${functionName}' not found in contract. Please check the function name.`
+      );
     }
 
-    return error as Error
-  }, [error, functionName])
+    return error as Error;
+  }, [error, functionName]);
 
   return {
     data: data as T,
     error: processedError,
     isLoading,
     refetch: enhancedRefetch,
-  }
+  };
 };

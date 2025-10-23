@@ -93,7 +93,7 @@ export function Navbar() {
             >
               Newsletter
             </Link>
-            {isWalletConnected && (
+            {isConnected && (
               <Link
                 href='/dashboard'
                 className={`text-sm font-medium ${pathname.startsWith('/dashboard') ? 'text-white' : 'text-zinc-400'}`}

@@ -52,8 +52,9 @@ import { Functions } from '@/utils/functions';
 import { useToast } from '@/hooks/use-toast';
 import { useTokenABI } from '@/hooks/useDeployedToken';
 import { isThisQuarter } from 'date-fns';
-import {constants} from 'starknet';
+import { constants } from 'starknet';
 import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
+import { useMulticall } from '@/hooks/useNiftMulticall';
 
 type GiftResultType = {
   id: number;
@@ -77,11 +78,13 @@ const formSchema = z.object({
 export function PurchaseForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
-  const [currentToken, setCurrentToken] = useState<`0x${string}` | string | undefined>('0x0');
+  const [currentToken, setCurrentToken] = useState<
+    `0x${string}` | string | undefined
+  >('0x0');
   const [currentAmount, setCurrentAmount] = useState<bigint>(BigInt(0));
   const [usdValue, setUsdValue] = useState(0);
   const { toast } = useToast();
-  const {account} = useAccount();
+  const { account } = useAccount();
   const deployedContract = useDeployContract();
   const tokenABI = useTokenABI();
 
@@ -93,54 +96,95 @@ export function PurchaseForm() {
     },
   });
 
-  const {writeAsync: tokenWriteAsync, isLoading: isTokenCallLoading} = useNiftWriteContract({
-    contractConfig: {
-      abi: tokenABI,
-      address: `${currentToken}`
-    },
-    functionName: 'approve',
-    onSuccess: (data) => {
-      purchaseGiftCard();
-    },
-    onError: (err) => {
-      toast({
-        title: 'Token Approval error',
-        description: 'Please try again',
-        variant: 'destructive',
-      });
-    }
-  })
-  
+  // const {writeAsync: tokenWriteAsync, isLoading: isTokenCallLoading} = useNiftWriteContract({
+  //   contractConfig: {
+  //     abi: tokenABI,
+  //     address: `${currentToken}`
+  //   },
+  //   functionName: 'approve',
+  //   onSuccess: (data) => {
+  //     purchaseGiftCard();
+  //   },
+  //   onError: (err) => {
+  //     toast({
+  //       title: 'Token Approval error',
+  //       description: 'Please try again',
+  //       variant: 'destructive',
+  //     });
+  //   }
+  // })
 
-  const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useNiftWriteContract({
-    contractConfig: {
-      abi: deployedContract?.abi,
-      address: deployedContract?.address
-    },
-    functionName: Functions.purchaseGiftCard,
-    onSuccess: (data) => {
+  // const {writeAsync, isLoading: waitIsLoading, error: waitIsError} = useNiftWriteContract({
+  //   contractConfig: {
+  //     abi: deployedContract?.abi,
+  //     address: deployedContract?.address
+  //   },
+  //   functionName: Functions.purchaseGiftCard,
+  //   onSuccess: (data) => {
+  //     setIsProcessing(false);
+  //     setIsPurchased(true);
+  //     setCurrentToken(undefined);
+  //     setCurrentAmount(BigInt(0));
+  //     form.reset();
+  //   },
+  //   onError: (err) => {
+  //     toast({
+  //       title: 'Purchase error',
+  //       description: 'Please try again',
+  //       variant: 'destructive',
+  //     });
+  //     setIsProcessing(false);
+  //   }
+  // })
+
+  const {
+    writeAsync,
+    isLoading: waitIsLoading,
+    error: waitIsError,
+  } = useMulticall({
+    onSuccess: data => {
       setIsProcessing(false);
       setIsPurchased(true);
       setCurrentToken(undefined);
       setCurrentAmount(BigInt(0));
       form.reset();
     },
-    onError: (err) => {
+    onError: err => {
       toast({
         title: 'Purchase error',
         description: 'Please try again',
         variant: 'destructive',
       });
       setIsProcessing(false);
-    }
-  })
-  
-  async function purchaseGiftCard() {
+    },
+  });
+
+  async function purchaseGiftCard(values: z.infer<typeof formSchema>) {
     try {
-      await writeAsync({
-        token: currentToken as `0x${string}`,
-        amount: currentAmount,
-      })
+      await writeAsync([
+        {
+          contractConfig: {
+            abi: tokenABI,
+            address: currentToken as `0x${string}`,
+          },
+          functionName: 'approve',
+          args: {
+            spender: deployedContract?.address as `0x${string}`,
+            amount: BigInt(Number(values.amount) * 10 ** 18),
+          },
+        },
+        {
+          contractConfig: {
+            abi: deployedContract?.abi,
+            address: deployedContract?.address,
+          },
+          functionName: Functions.purchaseGiftCard,
+          args: {
+            token: currentToken as `0x${string}`,
+            amount: currentAmount,
+          },
+        },
+      ]);
     } catch (error) {
       console.error('Error purchasing gift card:', error);
       setIsProcessing(false);
@@ -150,27 +194,12 @@ export function PurchaseForm() {
         variant: 'destructive',
       });
     }
-
   }
   async function onSubmit(values: z.infer<typeof formSchema>) {
-
     setCurrentToken(values.token);
     setCurrentAmount(BigInt(parseFloat(values.amount) * Math.pow(10, 18)));
     setIsProcessing(true);
-    try {
-      await tokenWriteAsync({
-        spender: deployedContract?.address as `0x${string}`,
-        amount: BigInt(Number(values.amount) * (10 ** 18))
-      })
-    } catch (error) {
-      console.error('Error approving token:', error);
-      setIsProcessing(false);
-      toast({
-        title: 'Token Approval error',
-        description: 'Please try again',
-        variant: 'destructive',
-      });
-    }
+    purchaseGiftCard(values);
   }
 
   function handleClose() {
