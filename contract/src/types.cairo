@@ -15,4 +15,5 @@ pub struct Gift {
     pub token_contract: ContractAddress,
     pub token_amount: u256,
     pub status: GiftStatus,
+    pub category_id: u64,
 }

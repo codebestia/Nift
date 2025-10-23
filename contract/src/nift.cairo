@@ -12,7 +12,10 @@ pub mod Nift {
         Map, MutableVecTrait, StorageMapReadAccess, StorageMapWriteAccess, StoragePathEntry,
         StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait,
     };
-    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address};
+    use starknet::{
+        ContractAddress, get_block_number, get_block_timestamp, get_caller_address,
+        get_contract_address,
+    };
     use crate::interface::INift;
     use crate::types::{Gift, GiftStatus};
 
@@ -111,12 +114,14 @@ pub mod Nift {
             self.assert_has_token_balance(token, amount, minter);
             // Initialize the Gift
             let token_id = self.id_pointer.read() + 1;
+            let category_id = self.generate_category_id();
             let gift = Gift {
                 token_id,
                 token_contract: token,
                 token_amount: amount,
                 minter,
                 status: GiftStatus::PURCHASED,
+                category_id,
             };
             // Save new token_id
             self.id_pointer.write(token_id);
@@ -126,6 +131,9 @@ pub mod Nift {
             // Calculate point and add it
             let points = self.calculate_points(token, amount, minter);
             self.add_to_user_points(minter, points);
+
+            // Save the Gift Info
+            self.gifts.entry(token_id).write(gift);
 
             // Transfer the token from the caller
             let nift_address = get_contract_address();
@@ -244,6 +252,12 @@ pub mod Nift {
             let prev_points = self.user_points.read(user);
             let new_points = prev_points + points;
             self.user_points.write(user, new_points);
+        }
+        fn generate_category_id(self: @ContractState) -> u64 {
+            let timestamp = get_block_timestamp();
+            let block_number = get_block_number();
+            let category_id = timestamp * block_number;
+            category_id % 20 // limit to 20 categories
         }
     }
 }

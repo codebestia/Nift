@@ -1,5 +1,3 @@
-
-
 #[starknet::contract]
 pub mod MockToken {
     use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
@@ -15,21 +13,18 @@ pub mod MockToken {
     #[storage]
     struct Storage {
         #[substorage(v0)]
-        erc20: ERC20Component::Storage
+        erc20: ERC20Component::Storage,
     }
 
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
         #[flat]
-        ERC20Event: ERC20Component::Event
+        ERC20Event: ERC20Component::Event,
     }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        recipient: ContractAddress
-    ) {
+    fn constructor(ref self: ContractState, recipient: ContractAddress) {
         let name = "MyToken";
         let symbol = "MTK";
 
