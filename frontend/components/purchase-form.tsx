@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { CairoOption, CairoOptionVariant } from 'starknet';
 import * as z from 'zod';
 import Image from 'next/image';
 import { Check, Loader2 } from 'lucide-react';
@@ -70,9 +71,15 @@ const formSchema = z.object({
   token: z.string({
     required_error: 'Please select a token.',
   }),
-  amount: z.string().min(1, {
+  amount: z.string().min(0.0000001, {
     message: 'Please enter an amount.',
   }),
+  message: z
+    .string()
+    .max(100, {
+      message: 'String must be at most 10 characters long.',
+    })
+    .optional(), // max length of 100 characters
 });
 
 export function PurchaseForm() {
@@ -93,6 +100,7 @@ export function PurchaseForm() {
     defaultValues: {
       token: '',
       amount: '',
+      message: '',
     },
   });
 
@@ -160,6 +168,11 @@ export function PurchaseForm() {
   });
 
   async function purchaseGiftCard(values: z.infer<typeof formSchema>) {
+    if (!deployedContract || !account) return;
+    let message =
+      values.message && values.message.length > 0
+        ? new CairoOption<string>(CairoOptionVariant.Some, values.message)
+        : new CairoOption<string>(CairoOptionVariant.None);
     try {
       await writeAsync([
         {
@@ -182,6 +195,7 @@ export function PurchaseForm() {
           args: {
             token: currentToken as `0x${string}`,
             amount: currentAmount,
+            message: message,
           },
         },
       ]);
@@ -275,7 +289,7 @@ export function PurchaseForm() {
                       <Input
                         placeholder='Enter amount'
                         type='number'
-                        step='0.001'
+                        step='0.0000001'
                         className='bg-background border-purple-800/50 focus-visible:ring-purple-500'
                         {...field}
                       />
@@ -288,6 +302,26 @@ export function PurchaseForm() {
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name='message'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Message</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='Enter a message for the gift (optional)'
+                        type='text'
+                        maxLength={100}
+                        className='bg-background border-purple-800/50 focus-visible:ring-purple-500'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>{`Gift Message`}</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button
                 type='submit'
                 className='w-full bg-purple-600 hover:bg-purple-700'

@@ -53,18 +53,22 @@ export function RedeemGiftCards() {
   if (!deployedContract) {
     return <ContractNotDeployed />;
   }
+  const readOptions =
+    deployedContract && address
+      ? {
+          functionName: Functions.getUserGifts,
+          address: deployedContract?.address,
+          abi: deployedContract?.abi,
+          watch: true,
+          args: [address],
+        }
+      : undefined;
   const {
     data: giftsData,
     isLoading,
     isError: isErrorGifts,
     error,
-  } = useReadContract({
-    functionName: Functions.getUserGifts,
-    address: deployedContract?.address,
-    abi: deployedContract?.abi,
-    watch: true,
-    args: [address],
-  });
+  } = useReadContract(readOptions);
   const {
     writeAsync,
     isLoading: waitIsLoading,

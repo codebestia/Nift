@@ -36,18 +36,21 @@ const RedeemGiftCardWidget = ({
 }: RedeemGiftCardWidgetProps) => {
   const [card, setCard] = useState<GiftCard | undefined>(undefined);
   const deployedContract = useDeployContract();
+  const readOptions = deployedContract
+    ? {
+        functionName: Functions.getGiftCardInfo,
+        address: deployedContract?.address,
+        abi: deployedContract?.abi,
+        watch: true,
+        args: [token_id],
+      }
+    : {};
   const {
     data: giftData,
     isLoading,
     isError: isErrorGift,
     error,
-  } = useReadContract({
-    functionName: Functions.getGiftCardInfo,
-    address: deployedContract?.address,
-    abi: deployedContract?.abi,
-    watch: true,
-    args: [token_id],
-  });
+  } = useReadContract(readOptions);
   const tokenABI = useTokenABI();
   useEffect(() => {
     if (giftData) {
