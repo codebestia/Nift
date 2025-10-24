@@ -76,6 +76,7 @@ pub mod Nift {
     #[storage]
     struct Storage {
         gifts: Map<u256, Gift>, // token_id => Gift
+        gift_messages: Map<u256, ByteArray>, // token_id => message
         user_purchased_gifts: Map<ContractAddress, Vec<u256>>,
         user_points: Map<ContractAddress, u256>,
         id_pointer: u256,
@@ -107,7 +108,10 @@ pub mod Nift {
             self.erc721._set_base_uri(uri);
         }
         fn purchase_gift_card(
-            ref self: ContractState, token: ContractAddress, amount: u256,
+            ref self: ContractState,
+            token: ContractAddress,
+            amount: u256,
+            message: Option<ByteArray>,
         ) -> Gift {
             let minter = get_caller_address();
             // Check token balance
@@ -115,6 +119,8 @@ pub mod Nift {
             // Initialize the Gift
             let token_id = self.id_pointer.read() + 1;
             let category_id = self.generate_category_id();
+
+            // Create Gift instance
             let gift = Gift {
                 token_id,
                 token_contract: token,
@@ -127,7 +133,10 @@ pub mod Nift {
             self.id_pointer.write(token_id);
             // Add token_id to user purchased gifts
             self.user_purchased_gifts.entry(minter).push(token_id);
-
+            // Save gift message if any
+            if let Some(msg) = message {
+                self.gift_messages.entry(token_id).write(msg);
+            }
             // Calculate point and add it
             let points = self.calculate_points(token, amount, minter);
             self.add_to_user_points(minter, points);
@@ -199,7 +208,9 @@ pub mod Nift {
         fn get_user_points(self: @ContractState, user: ContractAddress) -> u256 {
             self.user_points.read(user)
         }
-
+        fn get_gift_message(self: @ContractState, token_id: u256) -> ByteArray {
+            self.gift_messages.read(token_id)
+        }
         fn is_gift_card_available(self: @ContractState, token_id: u256) -> bool {
             let gift = self.gifts.read(token_id);
             gift.status == GiftStatus::PURCHASED

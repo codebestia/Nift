@@ -24,6 +24,8 @@ import { useTokenABI } from '@/hooks/useDeployedToken';
 import { getETHPriceEquivalent, getSTRKPriceEquivalent } from '@/lib/prices';
 import { formatTokenAmount } from '@/contracts/functions';
 import { getCardImageById } from '@/utils/asset';
+import { contractAddressToHex, getSymbolFromAddress } from '@/lib/utils';
+import tokenAddresses from '@/contracts/tokenAddresses';
 
 type RedeemGiftCardWidgetProps = {
   token_id: number;
@@ -35,6 +37,7 @@ const RedeemGiftCardWidget = ({
   handleRedeem,
 }: RedeemGiftCardWidgetProps) => {
   const [card, setCard] = useState<GiftCard | undefined>(undefined);
+  const [usdValue, setUsdValue] = useState<number>(0);
   const deployedContract = useDeployContract();
   const {
     data: giftData,
@@ -48,10 +51,21 @@ const RedeemGiftCardWidget = ({
     watch: true,
     args: [token_id],
   });
-  const tokenABI = useTokenABI();
+  const fetchUsdValue = async (giftCard: GiftCard) => {
+    const token = contractAddressToHex(giftCard.token_contract);
+    const amount = formatTokenAmount(BigInt(giftCard.token_amount));
+    let value = 0;
+    if (token == tokenAddresses.ETH) {
+      value = await getETHPriceEquivalent(Number(amount));
+    } else if (token == tokenAddresses.STRK) {
+      value = await getSTRKPriceEquivalent(Number(amount));
+    }
+    setUsdValue(value);
+  };
   useEffect(() => {
     if (giftData) {
       setCard(giftData);
+      fetchUsdValue(giftData as GiftCard);
     }
   }, [giftData]);
   useEffect(() => {
@@ -97,7 +111,9 @@ const RedeemGiftCardWidget = ({
           </CardHeader>
           <CardContent className='p-4 space-y-3'>
             <CardTitle className='flex items-center justify-between'>
-              <span>{card?.token_symbol ?? 'STRK'} Gift Card</span>
+              <span>
+                {getSymbolFromAddress(card?.token_contract ?? '')} Gift Card
+              </span>
               <span className='text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full'>
                 {card?.token_id}
               </span>
@@ -106,33 +122,20 @@ const RedeemGiftCardWidget = ({
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Token</span>
                 <span className='font-medium'>
-                  {card?.token_symbol ?? 'STRK'}
+                  {getSymbolFromAddress(card?.token_contract ?? '')}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
                   {formatTokenAmount(BigInt(card?.token_amount ?? 0))}{' '}
-                  {card?.token_symbol ?? 'STRK'}
+                  {getSymbolFromAddress(card?.token_contract ?? '')}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Value</span>
                 <span className='text-sm text-zinc-300'>
-                  $
-                  {card?.token_symbol == 'ETH'
-                    ? getETHPriceEquivalent(
-                        Number(
-                          formatTokenAmount(BigInt(card?.token_amount ?? 0))
-                        )
-                      )
-                    : card?.token_symbol == 'STRK'
-                      ? getSTRKPriceEquivalent(
-                          Number(
-                            formatTokenAmount(BigInt(card?.token_amount ?? 0))
-                          )
-                        )
-                      : 0}
+                  ${usdValue.toFixed(2)}
                 </span>
               </div>
             </div>

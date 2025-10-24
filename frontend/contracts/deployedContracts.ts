@@ -7,7 +7,7 @@ const deployedContracts = {
   sepolia: {
     Nift: {
       address:
-        '0x4b8be2248386e2d16a4d893ee8603ee51c79582102bbdb344fa645e5635cbd1',
+        '0x6106a1439728dc1d6308e972db43bda866205a4441f863f29563fe9434aac',
       abi: [
         {
           type: 'impl',
@@ -43,6 +43,20 @@ const deployedContracts = {
             {
               name: 'high',
               type: 'core::integer::u128',
+            },
+          ],
+        },
+        {
+          type: 'enum',
+          name: 'core::option::Option::<core::byte_array::ByteArray>',
+          variants: [
+            {
+              name: 'Some',
+              type: 'core::byte_array::ByteArray',
+            },
+            {
+              name: 'None',
+              type: '()',
             },
           ],
         },
@@ -146,6 +160,10 @@ const deployedContracts = {
                   name: 'amount',
                   type: 'core::integer::u256',
                 },
+                {
+                  name: 'message',
+                  type: 'core::option::Option::<core::byte_array::ByteArray>',
+                },
               ],
               outputs: [
                 {
@@ -226,6 +244,22 @@ const deployedContracts = {
               outputs: [
                 {
                   type: 'core::integer::u256',
+                },
+              ],
+              state_mutability: 'view',
+            },
+            {
+              type: 'function',
+              name: 'get_gift_message',
+              inputs: [
+                {
+                  name: 'token_id',
+                  type: 'core::integer::u256',
+                },
+              ],
+              outputs: [
+                {
+                  type: 'core::byte_array::ByteArray',
                 },
               ],
               state_mutability: 'view',
@@ -777,7 +811,7 @@ const deployedContracts = {
         },
       ],
       classHash:
-        '0x7149905d5fafbded9146c7f1673d4170205c9dac2c1aeac4b1ff5c92400e4ad',
+        '0x26e00bf20a38e16d449648ab481524351b0f38f42d5aba6be9be048ee7e858c',
     },
   },
 } as const;
