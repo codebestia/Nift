@@ -168,7 +168,7 @@ export function PurchaseForm() {
   });
 
   async function purchaseGiftCard(values: z.infer<typeof formSchema>) {
-    if (!deployedContract || !account) return;
+    // if (!deployedContract || !account) return;
     let message =
       values.message && values.message.length > 0
         ? new CairoOption<string>(CairoOptionVariant.Some, values.message)

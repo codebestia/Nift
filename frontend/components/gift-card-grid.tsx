@@ -57,6 +57,9 @@ export function GiftCardGrid({
 }: GiftCardGridProps) {
   const router = useRouter();
   const [selectedCard, setSelectedCard] = useState<GiftCard | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [selectedMessageDialogOpen, setSelectedMessageDialogOpen] =
+    useState<boolean>(false);
   const [recipientAddress, setRecipientAddress] = useState('');
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [processingDialogOpen, setProcessingDialogOpen] = useState(false);
@@ -93,6 +96,11 @@ export function GiftCardGrid({
     setSelectedCard(card);
     setRecipientAddress('');
     setSendDialogOpen(true);
+  };
+  const handleMessageView = (message: string | undefined) => {
+    if (!message) return;
+    setSelectedMessage(message);
+    setSelectedMessageDialogOpen(true);
   };
 
   const handleSendConfirm = () => {
@@ -183,6 +191,7 @@ export function GiftCardGrid({
               key={tokenId}
               tokenId={tokenId}
               handleSendGift={handleSendGift}
+              handleMessageView={handleMessageView}
             />
           ))}
         </div>
@@ -247,6 +256,21 @@ export function GiftCardGrid({
                 Send Gift
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {selectedMessage && (
+        <Dialog
+          open={selectedMessageDialogOpen}
+          onOpenChange={setSelectedMessageDialogOpen}
+        >
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle>Gift Message</DialogTitle>
+              <DialogDescription>
+                {selectedMessage ? selectedMessage : 'No message provided.'}
+              </DialogDescription>
+            </DialogHeader>
           </DialogContent>
         </Dialog>
       )}

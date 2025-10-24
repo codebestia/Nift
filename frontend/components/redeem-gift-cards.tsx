@@ -37,6 +37,7 @@ import { useRouter } from 'next/navigation';
 import { useNiftWriteContract } from '@/hooks/useNiftContractWrite';
 import { toast } from '@/hooks/use-toast';
 import { formatTokenAmount } from '@/contracts/functions';
+import { getSymbolFromAddress } from '@/lib/utils';
 
 export function RedeemGiftCards() {
   const router = useRouter();
@@ -53,22 +54,18 @@ export function RedeemGiftCards() {
   if (!deployedContract) {
     return <ContractNotDeployed />;
   }
-  const readOptions =
-    deployedContract && address
-      ? {
-          functionName: Functions.getUserGifts,
-          address: deployedContract?.address,
-          abi: deployedContract?.abi,
-          watch: true,
-          args: [address],
-        }
-      : undefined;
   const {
     data: giftsData,
     isLoading,
     isError: isErrorGifts,
     error,
-  } = useReadContract(readOptions);
+  } = useReadContract({
+    functionName: Functions.getUserGifts,
+    address: deployedContract?.address,
+    abi: deployedContract?.abi,
+    watch: true,
+    args: [address],
+  });
   const {
     writeAsync,
     isLoading: waitIsLoading,
@@ -192,7 +189,7 @@ export function RedeemGiftCards() {
                       <span className='text-sm text-zinc-400'>Amount</span>
                       <span className='font-medium'>
                         {formatTokenAmount(BigInt(selectedCard.token_amount))}{' '}
-                        {selectedCard.token_symbol ?? 'STRK'}
+                        {getSymbolFromAddress(selectedCard.token_contract)}
                       </span>
                     </div>
                     <div className='flex items-center justify-between'>

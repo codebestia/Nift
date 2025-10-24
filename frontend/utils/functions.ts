@@ -7,4 +7,5 @@ export const Functions = {
   getGiftCardInfo: 'get_gift_card_info',
   redeemGiftCard: 'redeem_gift_card',
   sendGiftCard: 'transfer_from',
+  getGiftMesage: 'get_gift_message',
 };

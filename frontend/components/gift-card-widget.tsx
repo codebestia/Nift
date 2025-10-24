@@ -34,14 +34,22 @@ import {
 import { get } from 'http';
 import { formatTokenAmount } from '@/contracts/functions';
 import { getCardImageById } from '@/utils/asset';
+import { getSymbolFromAddress } from '@/lib/utils';
+import tokenAddresses from '@/contracts/tokenAddresses';
 
 type GiftCardWidgetProps = {
   tokenId: number;
   handleSendGift: (card: GiftCard | undefined) => void;
+  handleMessageView: (message: string | undefined) => void;
 };
 
-const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
+const GiftCardWidget = ({
+  tokenId,
+  handleSendGift,
+  handleMessageView,
+}: GiftCardWidgetProps) => {
   const [card, setCard] = useState<GiftCard | undefined>(undefined);
+  const [usdValue, setUsdValue] = useState<number>(0);
   const deployedContract = useDeployContract();
   const tokenABI = useTokenABI();
   const {
@@ -56,11 +64,34 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
     watch: true,
     args: [tokenId],
   });
+  const { data: message } = useReadContract({
+    functionName: Functions.getGiftMesage,
+    address: deployedContract?.address,
+    abi: deployedContract?.abi,
+    watch: true,
+    args: [tokenId],
+  });
+  const fetchUsdValue = async (giftCard: GiftCard) => {
+    const token = contractAddressToHex(giftCard.token_contract);
+    const amount = formatTokenAmount(BigInt(giftCard.token_amount));
+    let value = 0;
+    if (token == tokenAddresses.ETH) {
+      value = await getETHPriceEquivalent(Number(amount));
+    } else if (token == tokenAddresses.STRK) {
+      value = await getSTRKPriceEquivalent(Number(amount));
+    }
+    setUsdValue(value);
+  };
+  const onMessageView = () => {
+    handleMessageView(message as string | undefined);
+  };
   useEffect(() => {
     if (giftData) {
       console.log('Gift Data:', giftData);
       console.log('Gift Data id:', giftData.category_id);
       setCard(giftData);
+      // Get USD value
+      fetchUsdValue(giftData);
     }
   }, [giftData]);
   useEffect(() => {
@@ -87,7 +118,7 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
                     ? getCardImageById(Number(card?.category_id))
                     : '/placeholder.svg'
                 }
-                alt={`${card?.token_symbol ?? 'Loading...'}`}
+                alt={`${getSymbolFromAddress(card?.token_contract ?? '')} Gift Card`}
                 fill
                 className='object-cover'
               />
@@ -133,33 +164,20 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Token</span>
                 <span className='font-medium'>
-                  {card?.token_symbol ?? 'STRK'}
+                  {getSymbolFromAddress(card?.token_contract ?? '')}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Amount</span>
                 <span className='font-medium'>
                   {formatTokenAmount(BigInt(card?.token_amount ?? 0))}{' '}
-                  {card?.token_symbol ?? 'STRK'}
+                  {getSymbolFromAddress(card?.token_contract ?? '')}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
                 <span className='text-sm text-zinc-400'>Value</span>
                 <span className='text-sm text-zinc-300'>
-                  $
-                  {card?.token_symbol == 'ETH'
-                    ? getETHPriceEquivalent(
-                        Number(
-                          formatTokenAmount(BigInt(card?.token_amount ?? 0))
-                        )
-                      )
-                    : card?.token_symbol == 'STRK'
-                      ? getSTRKPriceEquivalent(
-                          Number(
-                            formatTokenAmount(BigInt(card?.token_amount ?? 0))
-                          )
-                        )
-                      : 0}
+                  ${usdValue.toFixed(2)}
                 </span>
               </div>
               <div className='flex items-center justify-between'>
@@ -184,6 +202,7 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
                   <Button
                     variant='outline'
                     size='icon'
+                    onClick={onMessageView}
                     className='h-10 w-10 border-purple-800/50'
                   >
                     <Info className='h-4 w-4' />
@@ -191,7 +210,7 @@ const GiftCardWidget = ({ tokenId, handleSendGift }: GiftCardWidgetProps) => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>View Gift Card Details</p>
+                  <p>View Gift Message</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
