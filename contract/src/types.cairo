@@ -10,10 +10,12 @@ pub enum GiftStatus {
 
 #[derive(Copy, Drop, Serde, starknet::Store)]
 pub struct Gift {
+    pub name: Option<ByteArray>,
     pub token_id: u256,
     pub minter: ContractAddress,
     pub token_contract: ContractAddress,
     pub token_amount: u256,
+    pub token_symbol: ByteArray,
     pub status: GiftStatus,
     pub category_id: u64,
 }

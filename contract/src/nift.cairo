@@ -115,10 +115,16 @@ pub mod Nift {
             // Initialize the Gift
             let token_id = self.id_pointer.read() + 1;
             let category_id = self.generate_category_id();
+            // Get Token Symbol
+            let erc20_dispatcher = IERC20Dispatcher { contract_address: token };
+            let token_symbol = erc20_dispatcher.symbol();
+
+            // Create Gift instance
             let gift = Gift {
                 token_id,
                 token_contract: token,
                 token_amount: amount,
+                token_symbol,
                 minter,
                 status: GiftStatus::PURCHASED,
                 category_id,
